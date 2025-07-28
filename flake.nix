@@ -21,8 +21,8 @@
       pkgsForSystem = system: import inputs.nixpkgs {
         inherit system;
       };
-      mkHomeConfiguration = args: inputs.home-manager.lib.homeManagerConfiguration (rec {
-        pkgs = pkgsForSystem args.system or "x86_64-linux";
+      mkHomeConfiguration = args: system: inputs.home-manager.lib.homeManagerConfiguration (rec {
+        pkgs = pkgsForSystem system;
         modules = [
           ./home.nix
           inputs.stylix.homeModules.stylix
@@ -35,17 +35,16 @@
         extraSpecialArgs = {
           isDesktop = true;
         };
-      };
+      } "x86_64-linux";
       homeConfigurations.rpi = mkHomeConfiguration {
-        system = "aarch64-linux";
         extraSpecialArgs = {
           isDesktop = false;
         };
-      };
+      } "aarch64-linux";
       homeConfigurations.penguin = mkHomeConfiguration {
         extraSpecialArgs = {
           isDesktop = true;
         };
-      };
+      } "x86_64-linux";
     };
 }

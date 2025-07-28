@@ -17,9 +17,11 @@
 
   # The home.packages option allows you to install Nix packages into your
   # environment.
-  home.packages = with pkgs; [
-    whois (lib.hiPrio uutils-coreutils-noprefix) jq p7zip
-  ] ++ lib.optionals (isDesktop) [ tor-browser jellyfin-media-player ];
+  home.packages = with pkgs;
+    [ whois (lib.hiPrio uutils-coreutils-noprefix) jq p7zip ]
+    ++ lib.optionals (isDesktop) [ tor-browser jellyfin-media-player];
+
+  home.shell.enableBashIntegration = true;
 
   programs.home-manager.enable = true;
   programs.ripgrep.enable = true;
@@ -35,7 +37,6 @@
   };
   programs.starship = {
     enable = true;
-    enableBashIntegration = true;
     settings = {
       hostname = {
         ssh_only = false;
@@ -44,6 +45,7 @@
   };
   programs.bash = {
     enable = true;
+    enableVteIntegration = true;
     sessionVariables = {
       EDITOR = "vim";
       PAGER = "less";
@@ -52,13 +54,13 @@
       HISTFILE = "/dev/null";
     };
   };
-  programs.ghostty = {
-    enable = isDesktop;
+  programs.ghostty = pkgs.lib.mkIf isDesktop {
+    enable = true;
     installVimSyntax = true;
     enableBashIntegration = true;
   };
-  programs.firefox = {
-    enable = isDesktop;
+  programs.firefox = pkgs.lib.mkIf isDesktop {
+    enable = true;
     policies = {
       Cookies = {
         Behavior = "reject-foreign";
@@ -264,6 +266,8 @@
         action = "resume";
       };
     };
+    plugins.web-devicons.enable = true;
+    plugins.lualine.enable = true;
     defaultEditor = true;
     viAlias = true;
     vimAlias = true;
@@ -285,13 +289,16 @@
     '';
   };
 
-  gtk.enable = isDesktop;
   nix.package = pkgs.nixVersions.latest;
 
-  stylix = {
+  stylix = if isDesktop then {
     enable = true;
     base16Scheme = "${pkgs.base16-schemes}/share/themes/dracula.yaml";
     polarity = "dark";
+    image = pkgs.fetchurl {
+        url = "https://raw.githubusercontent.com/dracula/wallpaper/refs/heads/master/first-collection/nixos.png";
+        hash = "sha256-hJBs+1MYSAqxb9+ENP0AsHdUrvjTzjobGv57dx5pPGE=";
+    };
     fonts = {
       serif = {
         package = pkgs.nerd-fonts.noto;
@@ -310,9 +317,16 @@
         name = "Noto Color Emoji";
       };
     };
+  } else {
+    enable = true;
+    base16Scheme = "${pkgs.base16-schemes}/share/themes/dracula.yaml";
+    polarity = "dark";
     image = pkgs.fetchurl {
-      url = "https://raw.githubusercontent.com/dracula/wallpaper/refs/heads/master/first-collection/nixos.png";
-      hash = "sha256-hJBs+1MYSAqxb9+ENP0AsHdUrvjTzjobGv57dx5pPGE=";
+        url = "https://raw.githubusercontent.com/dracula/wallpaper/refs/heads/master/first-collection/nixos.png";
+        hash = "sha256-hJBs+1MYSAqxb9+ENP0AsHdUrvjTzjobGv57dx5pPGE=";
     };
+    targets.nixvim.enable = true;
+    targets.starship.enable = true;
+    autoEnable = false;
   };
 }
