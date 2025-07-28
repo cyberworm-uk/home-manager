@@ -27,7 +27,6 @@
   programs.ripgrep.enable = true;
   programs.direnv = {
     enable = true;
-    enableBashIntegration = true;
     nix-direnv.enable = true;
   };
   programs.git = {
@@ -47,7 +46,6 @@
     enable = true;
     enableVteIntegration = true;
     sessionVariables = {
-      EDITOR = "vim";
       PAGER = "less";
       LESSSECURE = "1";
       LESSHISTFILE = "-";
@@ -58,6 +56,9 @@
     enable = true;
     installVimSyntax = true;
     enableBashIntegration = true;
+    settings = {
+      theme = "Dracula";
+    };
   };
   programs.firefox = pkgs.lib.mkIf isDesktop {
     enable = true;
@@ -212,6 +213,7 @@
   };
   programs.nixvim = {
     enable = true;
+    colorschemes.dracula-nvim.enable = true;
     plugins.treesitter.enable = true;
     plugins.treesitter.settings.highlight.enable = true;
     plugins.lspconfig.enable = true;
@@ -325,7 +327,6 @@
         url = "https://raw.githubusercontent.com/dracula/wallpaper/refs/heads/master/first-collection/nixos.png";
         hash = "sha256-hJBs+1MYSAqxb9+ENP0AsHdUrvjTzjobGv57dx5pPGE=";
     };
-    targets.nixvim.enable = true;
     targets.starship.enable = true;
     autoEnable = false;
   };
