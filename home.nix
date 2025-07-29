@@ -290,6 +290,16 @@
       set background=dark
     '';
   };
+  programs.vscode = pkgs.lib.mkIf isDesktop {
+    enable = true;
+    package = pkgs.vscodium;
+    profiles.default.extensions = with pkgs.vscode-extensions; [
+      vscodevim.vim
+      mkhl.direnv
+      jnoortheen.nix-ide
+      dracula-theme.theme-dracula
+    ];
+  };
 
   nix.package = pkgs.nixVersions.latest;
 
