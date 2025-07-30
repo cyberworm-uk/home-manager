@@ -299,6 +299,11 @@
       jnoortheen.nix-ide
       dracula-theme.theme-dracula
     ];
+    profiles.default.userSettings = {
+      "editor.insertSpaces" = true;
+      "editor.tabSize" = 2;
+      "editor.renderWhitespace" = "boundary";
+    };
   };
 
   nix.package = pkgs.nixVersions.latest;
