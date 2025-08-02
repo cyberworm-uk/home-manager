@@ -75,7 +75,9 @@
         max_results = 200;
       };
       edit_mode = "vi";
+      buffer_editor = "nvim";
     };
+    plugins = with pkgs.nushellPlugins; [ formats net ];
   };
   programs.ghostty = pkgs.lib.mkIf isDesktop {
     enable = true;
@@ -87,6 +89,11 @@
   };
   programs.firefox = pkgs.lib.mkIf isDesktop {
     enable = true;
+    profiles.default.containers = {
+      social.id = 1;
+      media.id = 2;
+      research.id = 3;
+    };
     policies = {
       Cookies = {
         Behavior = "reject-foreign";
@@ -227,11 +234,6 @@
           "install_url" = "https://addons.mozilla.org/firefox/downloads/latest/dracula-dark-colorscheme/latest.xpi";
           "private_browsing" = true;
         };
-        "CanvasBlocker@kkapsner.de" = {
-          "installation_mode" = "force_installed";
-          "install_url" = "https://addons.mozilla.org/firefox/downloads/latest/canvasblocker/latest.xpi";
-          "private_browsing" = true;
-        };
       };
       PasswordManagerEnabled = false;
     };
@@ -341,6 +343,7 @@
         url = "https://raw.githubusercontent.com/dracula/wallpaper/refs/heads/master/first-collection/nixos.png";
         hash = "sha256-hJBs+1MYSAqxb9+ENP0AsHdUrvjTzjobGv57dx5pPGE=";
     };
+    targets.firefox.profileNames = [ "default" ];
     fonts = {
       serif = {
         package = pkgs.noto-fonts;
@@ -368,6 +371,7 @@
         hash = "sha256-hJBs+1MYSAqxb9+ENP0AsHdUrvjTzjobGv57dx5pPGE=";
     };
     targets.starship.enable = true;
+    targets.nushell.enable = true;
     autoEnable = false;
   };
 }
