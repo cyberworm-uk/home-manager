@@ -318,16 +318,16 @@
     };
     fonts = {
       serif = {
-        package = pkgs.nerd-fonts.noto;
-        name = "NotoSerif NF";
+        package = pkgs.noto-fonts;
+        name = "Noto Serif";
       };
       sansSerif = {
-        package = pkgs.nerd-fonts.noto;
-        name = "NotoSans NF";
+        package = pkgs.noto-fonts;
+        name = "Noto Sans";
       };
       monospace = {
-        package = pkgs.nerd-fonts.noto;
-        name = "NotoMono NFM";
+        package = pkgs.noto-fonts;
+        name = "Noto Sans Mono";
       };
       emoji = {
         package = pkgs.noto-fonts-color-emoji;
