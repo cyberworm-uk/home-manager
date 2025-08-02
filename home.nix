@@ -22,6 +22,7 @@
     ++ lib.optionals (isDesktop) [ tor-browser jellyfin-media-player];
 
   home.shell.enableBashIntegration = true;
+  home.shell.enableNushellIntegration = true;
 
   programs.home-manager.enable = true;
   programs.ripgrep.enable = true;
@@ -50,6 +51,30 @@
       LESSSECURE = "1";
       LESSHISTFILE = "-";
       HISTFILE = "/dev/null";
+    };
+  };
+  programs.nushell = {
+    enable = true;
+    extraConfig =
+    ''
+      $env.config = ($env.config | upsert hooks.env_change.PWD {|config|
+        let val = ($config | get -i hooks.env_change.PWD)
+        if $val == null {
+          $val | append {|| ${pkgs.direnv}/bin/direnv export json | from json | default {} | load-env }
+        } else {
+          [
+            {|| ${pkgs.direnv}/bin/direnv export json | from json | default {} | load-env }
+          ]
+        }
+      })
+    '';
+    settings = {
+      show_banner = false;
+      completions.external = {
+        enable = true;
+        max_results = 200;
+      };
+      edit_mode = "vi";
     };
   };
   programs.ghostty = pkgs.lib.mkIf isDesktop {
