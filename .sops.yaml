@@ -1,0 +1,23 @@
+keys:
+- &desktop-user age104t9madq27dulpxyvnudr9vdg5m2v58c46vxqvn0dvf8tnfqjdeqghx5t6
+- &rpi-user age1v8a540zr30rvzpat34yed6l8ylfvlqmpjwppa38g3fw502fsleaqyt3z2a
+- &laptop-user age16cdjr44gqdlqxftj3cluyl4psek5ypxvxtzwykx93c24slgnc5qqs4uh39
+creation_rules:
+  - path_regex: secrets/rpi-.*$
+    key_groups:
+    - age:
+      - *rpi-user
+  - path_regex: secrets/desktop-.*$
+    key_groups:
+    - age:
+      - *desktop-user
+  - path_regex: secrets/laptop-.*$
+    key_groups:
+    - age:
+      - *laptop-user
+  - path_regex: secrets/user-.*$
+    key_groups:
+    - age:
+      - *rpi-user
+      - *desktop-user
+      - *laptop-user
