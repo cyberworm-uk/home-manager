@@ -18,8 +18,9 @@
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = with pkgs;
-    [ whois (lib.hiPrio uutils-coreutils-noprefix) jq p7zip ]
-    ++ lib.optionals (isDesktop) [ tor-browser jellyfin-media-player];
+    [ whois (lib.hiPrio uutils-coreutils-noprefix) p7zip ]
+    ++ lib.optionals (isDesktop) [ tor-browser jellyfin-media-player ]
+    ++ lib.optionals (!isDesktop) [ ghostty.terminfo ];
 
   home.shell.enableBashIntegration = true;
   home.shell.enableNushellIntegration = true;
@@ -57,6 +58,10 @@
     enable = true;
     extraConfig =
     ''
+      let carapace_completer = {|spans|
+        carapace $spans.0 nushell ...$spans | from json
+      }
+      $env.config.completions.external.completer = $carapace_completer
       $env.config = ($env.config | upsert hooks.env_change.PWD {|config|
         let val = ($config | get -i hooks.env_change.PWD)
         if $val == null {
@@ -70,15 +75,20 @@
     '';
     settings = {
       show_banner = false;
-      completions.external = {
-        enable = true;
-        max_results = 200;
+      completions = {
+        algorithm = "fuzzy";
+        case_sensitive = false;
+        external = {
+          enable = true;
+          max_results = 100;
+        };
       };
       edit_mode = "vi";
       buffer_editor = "nvim";
     };
     plugins = with pkgs.nushellPlugins; [ formats net ];
   };
+  programs.carapace.enable = true;
   programs.ghostty = pkgs.lib.mkIf isDesktop {
     enable = true;
     installVimSyntax = true;
@@ -234,6 +244,11 @@
           "install_url" = "https://addons.mozilla.org/firefox/downloads/latest/dracula-dark-colorscheme/latest.xpi";
           "private_browsing" = true;
         };
+        "@testpilot-containers" = {
+          "installation_mode" = "force_installed";
+          "install_url" = "https://addons.mozilla.org/firefox/downloads/latest/multi-account-containers/latest.xpi";
+          "private_browsing" = true;
+        };
       };
       PasswordManagerEnabled = false;
     };
@@ -333,6 +348,25 @@
     };
   };
 
+  services.podman = {
+    enable = true;
+    autoUpdate.enable = true;
+    autoUpdate.onCalendar = "daily";
+    containers = {
+      arti = {
+        image = "ghcr.io/cyberworm-uk/arti:latest";
+        autoUpdate = "registry";
+        autoStart = true;
+        ports = [ "127.0.0.1:9050:9050" ];
+        volumes = [ "arti:/arti" ];
+      };
+    };
+    volumes.arti.autoStart = true;
+  };
+
+  fonts.fontconfig.enable = isDesktop;
+  gtk.enable = isDesktop;
+
   nix.package = pkgs.nixVersions.latest;
 
   stylix = if isDesktop then {
@@ -374,4 +408,5 @@
     targets.nushell.enable = true;
     autoEnable = false;
   };
+  sops.age.sshKeyPaths = [ "/home/user/.ssh/id_ed25519" ];
 }

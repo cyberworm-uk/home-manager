@@ -2,8 +2,6 @@
   description = "Home Manager configuration of user";
 
   inputs = {
-    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
-    fh.url = "https://flakehub.com/f/DeterminateSystems/fh/*";
     home-manager.url = "https://flakehub.com/f/nix-community/home-manager/0.2505.*";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     nixpkgs.url = "https://flakehub.com/f/nixos/nixpkgs/0.2505.*";
@@ -21,14 +19,16 @@
       pkgsForSystem = system: import inputs.nixpkgs {
         inherit system;
       };
-      mkHomeConfiguration = args: system: inputs.home-manager.lib.homeManagerConfiguration (rec {
-        pkgs = pkgsForSystem system;
-        modules = [
-          ./home.nix
-          inputs.stylix.homeModules.stylix
-          inputs.nixvim.homeModules.nixvim
-        ];
-      } // args);
+      mkHomeConfiguration = args: system:
+        inputs.home-manager.lib.homeManagerConfiguration (rec {
+          pkgs = pkgsForSystem system;
+          modules = [
+            ./home.nix
+            inputs.stylix.homeModules.stylix
+            inputs.nixvim.homeModules.nixvim
+            inputs.sops-nix.homeManagerModules.sops
+          ];
+        } // args);
     in
     {
       homeConfigurations.desktop = mkHomeConfiguration {
@@ -36,15 +36,15 @@
           isDesktop = true;
         };
       } "x86_64-linux";
+      homeConfigurations.terminal = {
+        extraSpecialArgs = {
+          isDesktop = false;
+        };
+      } "x86_64-linux";
       homeConfigurations.rpi = mkHomeConfiguration {
         extraSpecialArgs = {
           isDesktop = false;
         };
       } "aarch64-linux";
-      homeConfigurations.penguin = mkHomeConfiguration {
-        extraSpecialArgs = {
-          isDesktop = true;
-        };
-      } "x86_64-linux";
     };
 }
