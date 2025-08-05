@@ -367,8 +367,6 @@
   fonts.fontconfig.enable = isDesktop;
   gtk.enable = isDesktop;
 
-  nix.package = pkgs.nixVersions.latest;
-
   stylix = if isDesktop then {
     enable = true;
     base16Scheme = "${pkgs.base16-schemes}/share/themes/dracula.yaml";
