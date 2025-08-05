@@ -36,7 +36,7 @@
           isDesktop = true;
         };
       } "x86_64-linux";
-      homeConfigurations.terminal = {
+      homeConfigurations.terminal = mkHomeConfiguration {
         extraSpecialArgs = {
           isDesktop = false;
         };
