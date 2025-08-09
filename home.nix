@@ -23,7 +23,7 @@
     ++ lib.optionals (isDesktop) [
       wl-clipboard-rs grimblast
     ]
-    ++ lib.optionals (!isDesktop) [ ghostty.terminfo ];
+    ++ lib.optionals (!isDesktop) [ kitty.terminfo ];
 
   home.shell.enableBashIntegration = true;
   home.shell.enableNushellIntegration = true;
