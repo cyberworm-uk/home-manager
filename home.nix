@@ -1,4 +1,4 @@
-{ self, pkgs, isDesktop, ... }:
+{ inputs, pkgs, isDesktop, ... }:
 
 {
   # Home Manager needs a bit of information about you and the paths it should
@@ -20,22 +20,29 @@
   home.packages = with pkgs;
     [ whois (lib.hiPrio uutils-coreutils-noprefix) p7zip ]
     ++ lib.optionals (isDesktop) [ tor-browser jellyfin-media-player ]
+    ++ lib.optionals (isDesktop) [
+      wl-clipboard-rs grimblast
+    ]
     ++ lib.optionals (!isDesktop) [ ghostty.terminfo ];
 
   home.shell.enableBashIntegration = true;
   home.shell.enableNushellIntegration = true;
 
   programs.home-manager.enable = true;
+
   programs.ripgrep.enable = true;
+
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
   };
+
   programs.git = {
     enable = true;
     userName = "cyberworm-uk";
     userEmail = "93949496+cyberworm-uk@users.noreply.github.com";
   };
+
   programs.starship = {
     enable = true;
     settings = {
@@ -44,6 +51,7 @@
       };
     };
   };
+
   programs.bash = {
     enable = true;
     enableVteIntegration = true;
@@ -54,6 +62,7 @@
       HISTFILE = "/dev/null";
     };
   };
+
   programs.nushell = {
     enable = true;
     extraConfig =
@@ -72,6 +81,10 @@
           ]
         }
       })
+      $env.config.hooks.command_not_found = {
+        |command_name|
+        print (command-not-found $command_name | str trim)
+      }
     '';
     settings = {
       show_banner = false;
@@ -88,15 +101,175 @@
     };
     plugins = with pkgs.nushellPlugins; [ formats net ];
   };
+
   programs.carapace.enable = true;
-  programs.ghostty = pkgs.lib.mkIf isDesktop {
+
+  programs.kitty.enable = isDesktop; 
+
+  wayland.windowManager.hyprland = pkgs.lib.mkIf isDesktop {
     enable = true;
-    installVimSyntax = true;
-    enableBashIntegration = true;
-    settings = {
-      theme = "Dracula";
+    settings = let
+      toggle = program: let
+        prog = builtins.substring 0 14 program;
+      in "pkill ${prog} || uwsm app -- ${program}";
+
+      runOnce = program: "pgrep ${program} || uwsm app -- ${program}";
+      run = program: "uwsm app -- ${program}";
+    in {
+      "$mod" = "SUPER";
+      input = {
+        kb_layout = "gb";
+        kb_options = "caps:escape";
+        follow_mouse = 1;
+        accel_profile = "flat";
+        tablet.output = "current";
+      };
+      bindr = [
+        # launcher
+        "$mod, SUPER_L, exec, ${toggle "anyrun"}"
+      ];
+      bind =
+      [
+        "$mod, Return, exec, ${run "kitty"}"
+        "$mod SHIFT, E, exec, pkill Hyprland"
+        "$mod, Q, killactive,"
+        "$mod, F, fullscreen,"
+        "$mod, G, togglegroup,"
+        "$mod SHIFT, N, changegroupactive, f"
+        "$mod SHIFT, P, changegroupactive, b"
+        "$mod, R, togglesplit,"
+        "$mod, T, togglefloating,"
+        "$mod, P, pseudo,"
+        "$mod ALT, , resizeactive,"
+        "$mod, L, exec, loginctl lock-session"
+        "$mod, Escape, exec, ${toggle "wlogout"} -p layer-shell"
+        ", Print, exec, ${runOnce "grimblast"} copy area"
+      ] ++ (
+        builtins.concatLists  (builtins.genList (i:
+          let ws = i + 1;
+          in [
+            "$mod, code:1${toString i}, workspace, ${toString ws}"
+            "$mod SHIFT, code:1${toString i}, movetoworkspace, ${toString ws}"
+          ]
+        )
+        9)
+      );
+      bindm = [
+        "$mod, mouse:272, movewindow"
+        "$mod, mouse:273, resizewindow"
+        "$mod ALT, mouse:272, resizewindow"
+      ]; 
+      bindl = [
+        # media controls
+        ", XF86AudioPlay, exec, playerctl play-pause"
+        ", XF86AudioPrev, exec, playerctl previous"
+        ", XF86AudioNext, exec, playerctl next"
+
+        # volume
+        ", XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+        ", XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
+      ];
+      bindle = [
+        # volume
+        ", XF86AudioRaiseVolume, exec, wpctl set-volume -l '1.0' @DEFAULT_AUDIO_SINK@ 6%+"
+        ", XF86AudioLowerVolume, exec, wpctl set-volume -l '1.0' @DEFAULT_AUDIO_SINK@ 6%-"
+
+        # backlight
+        ", XF86MonBrightnessUp, exec, brillo -q -u 300000 -A 5"
+        ", XF86MonBrightnessDown, exec, brillo -q -u 300000 -U 5"
+      ];
+
+      windowrulev2 = [
+        "float, class:^(firefox)$"
+        "float, class:^(Tor Browser)$"
+        "float, title:^(Picture-in-Picture|Jellyfin Media Player)$"
+        "pin, title:^(Picture-in-Picture|Jellyfin Media Player)$"
+      ];
     };
   };
+
+  programs.hyprlock.enable = isDesktop;
+
+  programs.hyprpanel = pkgs.lib.mkIf isDesktop {
+    enable = true;
+    settings = {
+      scalingPriority = "both";
+      tear = true;
+      menus.transition = "crossfade";
+      theme.bar.scaling = 80;
+      theme.notification.scaling = 80;
+      theme.osd.scaling = 80;
+      theme.bar.menus.menu.dashboard.scaling = 80;
+      theme.bar.menus.menu.dashboard.confirmation_scaling = 80;
+      theme.bar.menus.menu.media.scaling = 80;
+      theme.bar.menus.menu.volume.scaling = 80;
+      theme.bar.menus.menu.network.scaling = 80;
+      theme.bar.menus.menu.bluetooth.scaling = 80;
+      theme.bar.menus.menu.battery.scaling = 80;
+      theme.bar.menus.menu.clock.scaling = 80;
+      theme.bar.menus.menu.notifications.scaling = 80;
+      theme.bar.menus.menu.power.scaling = 80;
+      theme.tooltip.scaling = 80;
+      bar.clock.format = "%H:%M:%S";
+      bar.layouts = {
+        "*" = {
+          left = [
+            "workspaces"
+            "notifications"
+            "netstat"
+          ];
+          middle = [
+            "cpu"
+            "ram"
+            "storage"
+            "cputemp"
+          ];
+          right = [
+            "volume"
+            "network"
+            "bluetooth"
+            "clock"
+            "hypridle"
+            "power"
+          ];
+        };
+      };
+      menus.clock.time.military = true;
+      menus.clock.weather.enabled = false;
+    };
+  };
+
+  services.hypridle = pkgs.lib.mkIf isDesktop {
+    enable = true;
+    settings = {
+      general = {
+        after_sleep_cmd = "hyprctl dispatch dpms on";
+        lock_cmd = "hyprlock";
+      };
+
+      listener = [
+        {
+          timeout = 300;
+          on-timeout = "hyprlock";
+        }
+        {
+          timeout = 360;
+          on-timeout = "hyprctl dispatch dpms off";
+          on-resume = "hyprctl dispatch dpms on";
+        }
+      ];
+    };
+  };
+
+  programs.anyrun = pkgs.lib.mkIf isDesktop {
+    enable = isDesktop;
+    config.plugins =
+      with inputs.anyrun.packages.${pkgs.system};
+      [ applications shell ];
+  };
+
+  services.playerctld.enable = isDesktop;
+
   programs.firefox = pkgs.lib.mkIf isDesktop {
     enable = true;
     profiles.default.containers = {
@@ -253,6 +426,7 @@
       PasswordManagerEnabled = false;
     };
   };
+
   programs.nixvim = {
     enable = true;
     colorschemes.dracula-nvim.enable = true;
@@ -332,6 +506,7 @@
       set background=dark
     '';
   };
+
   programs.vscode = pkgs.lib.mkIf isDesktop {
     enable = true;
     package = pkgs.vscodium;
@@ -339,7 +514,6 @@
       vscodevim.vim
       mkhl.direnv
       jnoortheen.nix-ide
-      dracula-theme.theme-dracula
     ];
     profiles.default.userSettings = {
       "editor.insertSpaces" = true;
@@ -378,16 +552,16 @@
     targets.firefox.profileNames = [ "default" ];
     fonts = {
       serif = {
-        package = pkgs.noto-fonts;
-        name = "Noto Serif";
+        package = pkgs.nerd-fonts.noto;
+        name = "NotoSerif NF";
       };
       sansSerif = {
-        package = pkgs.noto-fonts;
-        name = "Noto Sans";
+        package = pkgs.nerd-fonts.noto;
+        name = "NotoSans NF";
       };
       monospace = {
-        package = pkgs.noto-fonts;
-        name = "Noto Sans Mono";
+        package = pkgs.nerd-fonts.noto;
+        name = "NotoMono NFM";
       };
       emoji = {
         package = pkgs.noto-fonts-color-emoji;

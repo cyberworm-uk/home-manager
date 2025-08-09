@@ -11,10 +11,12 @@
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
     nixvim.url = "github:nix-community/nixvim";
     nixvim.inputs.nixpkgs.follows = "nixpkgs";
+    anyrun.url = "github:anyrun-org/anyrun";
+    anyrun.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
-    { self, ... }@inputs:
+    { ... }@inputs:
     let
       pkgsForSystem = system: import inputs.nixpkgs {
         inherit system;
@@ -34,21 +36,25 @@
       homeConfigurations.desktop = mkHomeConfiguration {
         extraSpecialArgs = {
           isDesktop = true;
+          inherit inputs;
         };
       } "x86_64-linux";
       homeConfigurations.laptop = mkHomeConfiguration {
         extraSpecialArgs = {
           isDesktop = true;
+          inherit inputs;
         };
       } "x86_64-linux";
       homeConfigurations.terminal = mkHomeConfiguration {
         extraSpecialArgs = {
           isDesktop = false;
+          inherit inputs;
         };
       } "x86_64-linux";
       homeConfigurations.rpi = mkHomeConfiguration {
         extraSpecialArgs = {
           isDesktop = false;
+          inherit inputs;
         };
       } "aarch64-linux";
     };
