@@ -1,4 +1,4 @@
-{ inputs, pkgs, isDesktop, ... }:
+{ inputs, config, pkgs, isDesktop, ... }:
 
 {
   # Home Manager needs a bit of information about you and the paths it should
@@ -18,10 +18,16 @@
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = with pkgs;
-    [ whois (lib.hiPrio uutils-coreutils-noprefix) p7zip inputs.fh.packages.${system}.default ]
-    ++ lib.optionals (isDesktop) [ tor-browser jellyfin-media-player ]
-    ++ lib.optionals (isDesktop) [ wl-clipboard-rs grimblast ]
-    ++ lib.optionals (isDesktop) [
+    [ whois
+      (lib.hiPrio uutils-coreutils-noprefix)
+      p7zip
+      inputs.fh.packages.${system}.default
+    ] ++ lib.optionals (isDesktop) [
+      tor-browser
+      jellyfin-media-player
+      wl-clipboard-rs
+      grimblast
+    ] ++ lib.optionals (isDesktop) [
       (pkgs.writeShellApplication {
         name = "hyprland.sh";
         text = ''
@@ -35,6 +41,10 @@
   home.shell.enableNushellIntegration = true;
 
   programs.home-manager.enable = true;
+  services.home-manager = {
+    autoExpire.enable = true;
+    autoExpire.store.cleanup = true;
+  };
 
   programs.ripgrep.enable = true;
 
@@ -149,7 +159,7 @@
         "$mod ALT, , resizeactive,"
         "$mod, L, exec, loginctl lock-session"
         "$mod, Escape, exec, ${toggle "wlogout"} -p layer-shell"
-        ", Print, exec, ${runOnce "grimblast"} copy area"
+        ", Print, exec, GRIMBLAST_HIDE_CURSOR=0 grimblast copy area"
       ] ++ (
         builtins.concatLists  (builtins.genList (i:
           let ws = i + 1;
@@ -267,8 +277,20 @@
     };
   };
 
+  programs.spotify-player = pkgs.lib.mkIf isDesktop {
+    enable = true;
+    settings = {
+      client_id_command = {
+        command = "cat";
+        args = [ "${config.sops.templates.spotify-client-id.path}" ];
+      };
+    };
+  };
+
+  services.hyprpolkitagent.enable = isDesktop;
+
   programs.anyrun = pkgs.lib.mkIf isDesktop {
-    enable = isDesktop;
+    enable = true;
     config.plugins =
       with inputs.anyrun.packages.${pkgs.system};
       [ applications shell ];
@@ -587,4 +609,9 @@
     autoEnable = false;
   };
   sops.age.sshKeyPaths = [ "/home/user/.ssh/id_ed25519" ];
+  sops.secrets."spotify-client-id" = {
+    sopsFile = secrets/user-secrets.yaml;
+    format = "yaml";
+  };
+  sops.templates."spotify-client-id".content = "${config.sops.placeholder.spotify-client-id}";
 }
