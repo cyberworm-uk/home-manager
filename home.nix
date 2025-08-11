@@ -18,10 +18,16 @@
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = with pkgs;
-    [ whois (lib.hiPrio uutils-coreutils-noprefix) p7zip ]
+    [ whois (lib.hiPrio uutils-coreutils-noprefix) p7zip inputs.fh.packages.${system}.default ]
     ++ lib.optionals (isDesktop) [ tor-browser jellyfin-media-player ]
+    ++ lib.optionals (isDesktop) [ wl-clipboard-rs grimblast ]
     ++ lib.optionals (isDesktop) [
-      wl-clipboard-rs grimblast
+      (pkgs.writeShellApplication {
+        name = "hyprland.sh";
+        text = ''
+          uwsm app Hyprland
+        '';
+      })
     ]
     ++ lib.optionals (!isDesktop) [ kitty.terminfo ];
 

@@ -13,14 +13,14 @@
     nixvim.inputs.nixpkgs.follows = "nixpkgs";
     anyrun.url = "github:anyrun-org/anyrun";
     anyrun.inputs.nixpkgs.follows = "nixpkgs";
+    fh.url = "https://flakehub.com/f/DeterminateSystems/fh/*";
+    fh.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
     { ... }@inputs:
     let
-      pkgsForSystem = system: import inputs.nixpkgs {
-        inherit system;
-      };
+      pkgsForSystem = system: inputs.nixpkgs.legacyPackages.${system};
       mkHomeConfiguration = args: system:
         inputs.home-manager.lib.homeManagerConfiguration (rec {
           pkgs = pkgsForSystem system;
