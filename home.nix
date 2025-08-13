@@ -1,4 +1,4 @@
-{ inputs, config, pkgs, isDesktop, ... }:
+{ inputs, config, pkgs, isDesktop, isWM, ... }:
 
 {
   # Home Manager needs a bit of information about you and the paths it should
@@ -21,13 +21,12 @@
     [ whois
       (lib.hiPrio uutils-coreutils-noprefix)
       p7zip
-      inputs.fh.packages.${system}.default
     ] ++ lib.optionals (isDesktop) [
       tor-browser
       jellyfin-media-player
       wl-clipboard-rs
       grimblast
-    ] ++ lib.optionals (isDesktop) [
+    ] ++ lib.optionals (isWM) [
       (pkgs.writeShellApplication {
         name = "hyprland.sh";
         text = ''
@@ -36,6 +35,8 @@
       })
     ]
     ++ lib.optionals (!isDesktop) [ kitty.terminfo ];
+
+  home.language.base = "en_GB.UTF-8";
 
   home.shell.enableBashIntegration = true;
   home.shell.enableNushellIntegration = true;
@@ -70,7 +71,6 @@
 
   programs.bash = {
     enable = true;
-    enableVteIntegration = true;
     sessionVariables = {
       PAGER = "less";
       LESSSECURE = "1";
@@ -78,6 +78,18 @@
       HISTFILE = "/dev/null";
     };
   };
+
+  programs.spotify-player = pkgs.lib.mkIf isDesktop {
+    enable = true;
+    settings = {
+      client_id_command = {
+        command = "cat";
+        args = [ "${config.sops.templates.spotify-client-id.path}" ];
+      };
+    };
+  };
+
+  services.playerctld.enable = isWM;
 
   programs.nushell = {
     enable = true;
@@ -105,24 +117,29 @@
     settings = {
       show_banner = false;
       completions = {
-        algorithm = "fuzzy";
         case_sensitive = false;
         external = {
           enable = true;
-          max_results = 100;
+          max_results = 50;
         };
       };
-      edit_mode = "vi";
-      buffer_editor = "nvim";
     };
     plugins = with pkgs.nushellPlugins; [ formats net ];
   };
 
   programs.carapace.enable = true;
 
+  programs.helix = {
+    enable = true;
+    defaultEditor = true;
+    settings.editor = {
+      line-number = "relative";
+    };
+  };
+
   programs.kitty.enable = isDesktop; 
 
-  wayland.windowManager.hyprland = pkgs.lib.mkIf isDesktop {
+  wayland.windowManager.hyprland = pkgs.lib.mkIf isWM {
     enable = true;
     settings = let
       toggle = program: let
@@ -141,7 +158,6 @@
         tablet.output = "current";
       };
       bindr = [
-        # launcher
         "$mod, SUPER_L, exec, ${toggle "anyrun"}"
       ];
       bind =
@@ -204,9 +220,9 @@
     };
   };
 
-  programs.hyprlock.enable = isDesktop;
+  programs.hyprlock.enable = isWM;
 
-  programs.hyprpanel = pkgs.lib.mkIf isDesktop {
+  programs.hyprpanel = pkgs.lib.mkIf isWM {
     enable = true;
     settings = {
       scalingPriority = "both";
@@ -232,9 +248,11 @@
           left = [
             "workspaces"
             "notifications"
+            "hypridle"
             "netstat"
           ];
           middle = [
+            "media"
             "cpu"
             "ram"
             "storage"
@@ -245,7 +263,6 @@
             "network"
             "bluetooth"
             "clock"
-            "hypridle"
             "power"
           ];
         };
@@ -255,7 +272,7 @@
     };
   };
 
-  services.hypridle = pkgs.lib.mkIf isDesktop {
+  services.hypridle = pkgs.lib.mkIf isWM {
     enable = true;
     settings = {
       general = {
@@ -277,27 +294,17 @@
     };
   };
 
-  programs.spotify-player = pkgs.lib.mkIf isDesktop {
-    enable = true;
-    settings = {
-      client_id_command = {
-        command = "cat";
-        args = [ "${config.sops.templates.spotify-client-id.path}" ];
-      };
-    };
-  };
+  services.hyprpolkitagent.enable = isWM;
 
-  services.hyprpolkitagent.enable = isDesktop;
-
-  programs.anyrun = pkgs.lib.mkIf isDesktop {
+  programs.anyrun = pkgs.lib.mkIf isWM {
     enable = true;
     config.plugins =
       with inputs.anyrun.packages.${pkgs.system};
       [ applications shell ];
   };
 
-  services.playerctld.enable = isDesktop;
 
+  # this config is too big to be here
   programs.firefox = pkgs.lib.mkIf isDesktop {
     enable = true;
     profiles.default.containers = {
@@ -457,91 +464,11 @@
     };
   };
 
-  programs.nixvim = {
-    enable = true;
-    colorschemes.dracula-nvim.enable = true;
-    plugins.treesitter.enable = true;
-    plugins.treesitter.settings.highlight.enable = true;
-    plugins.lspconfig.enable = true;
-    plugins.telescope.enable = true;
-    plugins.telescope.keymaps = {
-      "<leader>ff" = {
-        action = "find_files";
-      };
-      "<leader>fg" = {
-        action = "live_grep";
-      };
-      "<leader>fb" = {
-        action = "buffers";
-      };
-      "<leader>fh" = {
-        action = "help_tags";
-      };
-      "<leader>fc" = {
-        action = "commands";
-      };
-      "<leader>fq" = {
-        action = "quickfix";
-      };
-      "<leader>fk" = {
-        action = "keymaps";
-      };
-      "<leader>fr" = {
-        action = "lsp_references";
-      };
-      "<leader>fds" = {
-        action = "lsp_document_symbols";
-      };
-      "<leader>fs" = {
-        action = "lsp_workspace_symbols";
-      };
-      "<leader>fp" = {
-        action = "diagnostics";
-      };
-      "<leader>fi" = {
-        action = "lsp_implementations";
-      };
-      "<leader>fd" = {
-        action = "lsp_definitions";
-      };
-      "<leader>ft" = {
-        action = "lsp_type_definitions";
-      };
-      "<leader>fa" = {
-        action = "builtin";
-      };
-      "<leader>f;" = {
-        action = "resume";
-      };
-    };
-    plugins.web-devicons.enable = true;
-    plugins.lualine.enable = true;
-    defaultEditor = true;
-    viAlias = true;
-    vimAlias = true;
-    vimdiffAlias = true;
-    extraConfigVim =
-    ''
-      set number
-      set relativenumber
-      set backspace=indent,eol,start
-      set hidden
-      set ignorecase smartcase incsearch hlsearch
-      nmap Q <Nop>
-      set noerrorbells visualbell t_vb=
-      highlight RedundantSpaces ctermbg=red guibg=red
-      match RedundantSpaces /\s\+$/
-      set viminfofile=NONE directory=/dev/shm
-      set tabstop=2 softtabstop=2 shiftwidth=2 et
-      set background=dark
-    '';
-  };
 
-  programs.vscode = pkgs.lib.mkIf isDesktop {
+  programs.vscode = pkgs.lib.mkIf isWM {
     enable = true;
     package = pkgs.vscodium;
     profiles.default.extensions = with pkgs.vscode-extensions; [
-      vscodevim.vim
       mkhl.direnv
       jnoortheen.nix-ide
     ];
@@ -552,6 +479,7 @@
     };
   };
 
+  # handy proxy
   services.podman = {
     enable = true;
     autoUpdate.enable = true;
@@ -571,45 +499,40 @@
   fonts.fontconfig.enable = isDesktop;
   gtk.enable = isDesktop;
 
-  stylix = if isDesktop then {
-    enable = true;
-    base16Scheme = "${pkgs.base16-schemes}/share/themes/dracula.yaml";
-    polarity = "dark";
-    image = pkgs.fetchurl {
-        url = "https://raw.githubusercontent.com/dracula/wallpaper/refs/heads/master/first-collection/nixos.png";
-        hash = "sha256-hJBs+1MYSAqxb9+ENP0AsHdUrvjTzjobGv57dx5pPGE=";
-    };
-    targets.firefox.profileNames = [ "default" ];
-    fonts = {
-      serif = {
-        package = pkgs.nerd-fonts.noto;
-        name = "NotoSerif NF";
-      };
-      sansSerif = {
-        package = pkgs.nerd-fonts.noto;
-        name = "NotoSans NF";
-      };
-      monospace = {
-        package = pkgs.nerd-fonts.noto;
-        name = "NotoMono NFM";
-      };
-      emoji = {
-        package = pkgs.noto-fonts-color-emoji;
-        name = "Noto Color Emoji";
-      };
-    };
-  } else {
-    enable = true;
-    base16Scheme = "${pkgs.base16-schemes}/share/themes/dracula.yaml";
-    polarity = "dark";
-    image = pkgs.fetchurl {
-        url = "https://raw.githubusercontent.com/dracula/wallpaper/refs/heads/master/first-collection/nixos.png";
-        hash = "sha256-hJBs+1MYSAqxb9+ENP0AsHdUrvjTzjobGv57dx5pPGE=";
-    };
-    targets.starship.enable = true;
-    targets.nushell.enable = true;
-    autoEnable = false;
+  # stylix for visual consistency
+  stylix.enable = true;
+  stylix.polarity = "dark";
+  stylix.base16Scheme = "${pkgs.base16-schemes}/share/themes/dracula.yaml";
+  stylix.image = pkgs.fetchurl {
+    url = "https://raw.githubusercontent.com/dracula/wallpaper/refs/heads/master/first-collection/nixos.png";
+    hash = "sha256-hJBs+1MYSAqxb9+ENP0AsHdUrvjTzjobGv57dx5pPGE=";
   };
+  stylix.fonts = pkgs.lib.mkIf isDesktop {
+    serif = {
+      package = pkgs.nerd-fonts.noto;
+      name = "NotoSerif NF";
+    };
+    sansSerif = {
+      package = pkgs.nerd-fonts.noto;
+      name = "NotoSans NF";
+    };
+    monospace = {
+      package = pkgs.nerd-fonts.noto;
+      name = "NotoMono NFM";
+    };
+    emoji = {
+      package = pkgs.noto-fonts-color-emoji;
+      name = "Noto Color Emoji";
+    };
+  };
+  stylix.targets.firefox.profileNames = [ "default" ];
+  stylix.autoEnable = isDesktop;
+  # terminal only applications we care about here
+  stylix.targets.starship.enable = true;
+  stylix.targets.nushell.enable = true;
+  stylix.targets.helix.enable = true;
+
+  # sops secrets
   sops.age.sshKeyPaths = [ "/home/user/.ssh/id_ed25519" ];
   sops.secrets."spotify-client-id" = {
     sopsFile = secrets/user-secrets.yaml;

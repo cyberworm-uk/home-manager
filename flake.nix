@@ -9,12 +9,8 @@
     stylix.inputs.nixpkgs.follows = "nixpkgs";
     sops-nix.url = "https://flakehub.com/f/Mic92/sops-nix/*";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
-    nixvim.url = "github:nix-community/nixvim";
-    nixvim.inputs.nixpkgs.follows = "nixpkgs";
     anyrun.url = "github:anyrun-org/anyrun";
     anyrun.inputs.nixpkgs.follows = "nixpkgs";
-    fh.url = "https://flakehub.com/f/DeterminateSystems/fh/*";
-    fh.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
@@ -27,7 +23,6 @@
           modules = [
             ./home.nix
             inputs.stylix.homeModules.stylix
-            inputs.nixvim.homeModules.nixvim
             inputs.sops-nix.homeManagerModules.sops
           ];
         } // args);
@@ -36,24 +31,28 @@
       homeConfigurations.desktop = mkHomeConfiguration {
         extraSpecialArgs = {
           isDesktop = true;
+          isWM = true;
           inherit inputs;
         };
       } "x86_64-linux";
       homeConfigurations.laptop = mkHomeConfiguration {
         extraSpecialArgs = {
           isDesktop = true;
+          isWM = false;
           inherit inputs;
         };
       } "x86_64-linux";
       homeConfigurations.terminal = mkHomeConfiguration {
         extraSpecialArgs = {
           isDesktop = false;
+          isWM = false;
           inherit inputs;
         };
       } "x86_64-linux";
       homeConfigurations.rpi = mkHomeConfiguration {
         extraSpecialArgs = {
           isDesktop = false;
+          isWM = false;
           inherit inputs;
         };
       } "aarch64-linux";
