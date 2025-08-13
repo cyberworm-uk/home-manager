@@ -426,6 +426,7 @@
         "webgl.renderer-string-override" = { Value = " "; Status = "locked"; };
         "webgl.vendor-string-override" = { Value = " "; Status = "locked"; };
         "browser.ml.chat.enabled" = { Value = false; Status = "locked";};
+        "browser.ml.enabled" = { Value = false; Status = "locked";};
       };
       ExtensionSettings = {
         "*" = {
