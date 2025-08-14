@@ -15,6 +15,12 @@
   # release notes.
   home.stateVersion = "25.05"; # Please read the comment before changing.
 
+  # https://github.com/nix-community/home-manager/issues/2033
+  news = {
+    display = "silent";
+    entries = pkgs.lib.mkForce [ ];
+  };
+
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = with pkgs;
@@ -60,6 +66,7 @@
     userEmail = "93949496+cyberworm-uk@users.noreply.github.com";
   };
 
+  stylix.targets.starship.enable = true;
   programs.starship = {
     enable = true;
     settings = {
@@ -91,6 +98,7 @@
 
   services.playerctld.enable = isWM;
 
+  stylix.targets.nushell.enable = true;
   programs.nushell = {
     enable = true;
     extraConfig =
@@ -129,15 +137,22 @@
 
   programs.carapace.enable = true;
 
+  # we have a builtin theme
+  stylix.targets.helix.enable = pkgs.lib.mkForce false;
   programs.helix = {
     enable = true;
     defaultEditor = true;
+    settings.theme = "dracula";
     settings.editor = {
       line-number = "relative";
     };
   };
 
-  programs.kitty.enable = isDesktop; 
+  programs.kitty = pkgs.lib.mkIf isDesktop {
+    enable = true;
+    # over-ride the stylix theme but we still want font config
+    extraConfig = "include ${pkgs.kitty-themes}/share/kitty-themes/themes/Dracula.conf";
+  };
 
   wayland.windowManager.hyprland = pkgs.lib.mkIf isWM {
     enable = true;
@@ -305,6 +320,7 @@
 
 
   # this config is too big to be here
+  stylix.targets.firefox.profileNames = [ "default" ];
   programs.firefox = pkgs.lib.mkIf isDesktop {
     enable = true;
     profiles.default.containers = {
@@ -464,7 +480,6 @@
     };
   };
 
-
   programs.vscode = pkgs.lib.mkIf isWM {
     enable = true;
     package = pkgs.vscodium;
@@ -525,12 +540,8 @@
       name = "Noto Color Emoji";
     };
   };
-  stylix.targets.firefox.profileNames = [ "default" ];
   stylix.autoEnable = isDesktop;
   # terminal only applications we care about here
-  stylix.targets.starship.enable = true;
-  stylix.targets.nushell.enable = true;
-  stylix.targets.helix.enable = true;
 
   # sops secrets
   sops.age.sshKeyPaths = [ "/home/user/.ssh/id_ed25519" ];
