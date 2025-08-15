@@ -237,55 +237,120 @@
 
   programs.hyprlock.enable = isWM;
 
-  programs.hyprpanel = pkgs.lib.mkIf isWM {
+  programs.waybar = pkgs.lib.mkIf isWM {
     enable = true;
+    systemd.enable = true;
     settings = {
-      scalingPriority = "both";
-      tear = true;
-      menus.transition = "crossfade";
-      theme.bar.scaling = 80;
-      theme.notification.scaling = 80;
-      theme.osd.scaling = 80;
-      theme.bar.menus.menu.dashboard.scaling = 80;
-      theme.bar.menus.menu.dashboard.confirmation_scaling = 80;
-      theme.bar.menus.menu.media.scaling = 80;
-      theme.bar.menus.menu.volume.scaling = 80;
-      theme.bar.menus.menu.network.scaling = 80;
-      theme.bar.menus.menu.bluetooth.scaling = 80;
-      theme.bar.menus.menu.battery.scaling = 80;
-      theme.bar.menus.menu.clock.scaling = 80;
-      theme.bar.menus.menu.notifications.scaling = 80;
-      theme.bar.menus.menu.power.scaling = 80;
-      theme.tooltip.scaling = 80;
-      bar.clock.format = "%H:%M:%S";
-      bar.layouts = {
-        "*" = {
-          left = [
-            "workspaces"
-            "notifications"
-            "hypridle"
-            "netstat"
-          ];
-          middle = [
-            "media"
-            "cpu"
-            "ram"
-            "storage"
-            "cputemp"
-          ];
-          right = [
-            "volume"
-            "network"
-            "bluetooth"
-            "clock"
-            "power"
-          ];
+      mainBar = {
+        position = "bottom";
+        modules-left = [
+          "hyprland/workspaces"
+          "custom/sep"
+          "network"
+        ];
+        modules-center = [
+          "cpu"
+          "custom/sep"
+          "memory"
+          "custom/sep"
+          "disk"
+          "custom/sep"
+          "temperature"
+        ];
+        modules-right = [
+          "mpris"
+          "custom/sep"
+          "wireplumber"
+          "custom/sep"
+          "clock"
+        ];
+        network = {
+          interface = "tailscale0";
+          format = "{icon} ↓{bandwidthDownBits}↑{bandwidthUpBits}";
+          format-disconnected = "";
+        };
+        wireplumber = {
+          "format" = "{volume}%";
+          "format-muted" = "";
+          "max-volume" = 100;
+          "scroll-step" = 0.2;
+        };
+        disk = {
+          format = " {used}/{total}";
+          path = "/nix";
+        };
+        memory = {
+          format = " {total}GiB ({percentage}%)";
+        };
+        cpu = {
+          format = " {load} ({usage}%) {avg_frequency}GHz";
+        };
+        mpris = {
+          format = "{player} ({status})";
+          # tooltip-format = "{dynamic}";
+        };
+        clock = {
+          format = "{:%F %R}";
+          tooltip-format = "{calendar}";
+        };
+        "custom/sep" = {
+          format = "|";
+          interval = "once";
+          tooltip = false;
         };
       };
-      menus.clock.time.military = true;
-      menus.clock.weather.enabled = false;
     };
   };
+
+  # programs.hyprpanel = pkgs.lib.mkIf isWM {
+  #   enable = true;
+  #   settings = {
+  #     scalingPriority = "both";
+  #     tear = true;
+  #     menus.transition = "crossfade";
+  #     theme.bar.scaling = 80;
+  #     theme.notification.scaling = 80;
+  #     theme.osd.scaling = 80;
+  #     theme.bar.menus.menu.dashboard.scaling = 80;
+  #     theme.bar.menus.menu.dashboard.confirmation_scaling = 80;
+  #     theme.bar.menus.menu.media.scaling = 80;
+  #     theme.bar.menus.menu.volume.scaling = 80;
+  #     theme.bar.menus.menu.network.scaling = 80;
+  #     theme.bar.menus.menu.bluetooth.scaling = 80;
+  #     theme.bar.menus.menu.battery.scaling = 80;
+  #     theme.bar.menus.menu.clock.scaling = 80;
+  #     theme.bar.menus.menu.notifications.scaling = 80;
+  #     theme.bar.menus.menu.power.scaling = 80;
+  #     theme.tooltip.scaling = 80;
+  #     bar.clock.format = "%H:%M:%S";
+  #     bar.layouts = {
+  #       "*" = {
+  #         left = [
+  #           "workspaces"
+  #           "notifications"
+  #           "hypridle"
+  #           "netstat"
+  #         ];
+  #         middle = [
+  #           "media"
+  #           "cpu"
+  #           "ram"
+  #           "storage"
+  #           "cputemp"
+  #         ];
+  #         right = [
+  #           "volume"
+  #           "network"
+  #           "bluetooth"
+  #           "clock"
+  #           "power"
+  #         ];
+  #       };
+  #     };
+  #     menus.clock.time.military = true;
+  #     menus.clock.weather.enabled = false;
+  #   };
+  # };
 
   services.hypridle = pkgs.lib.mkIf isWM {
     enable = true;
